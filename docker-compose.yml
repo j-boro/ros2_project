@@ -1,0 +1,41 @@
+services:
+  my-ros-robot:
+    build: .
+    container_name: ros_robot
+    networks:
+      - ur_net
+    devices:
+      - /dev/dri:/dev/dri
+      
+    privileged: true
+    environment:
+      - ROS_DOMAIN_ID=0
+      - DISPLAY=${DISPLAY}
+      - QT_QPA_PLATFORM=xcb
+      - QT_X11_NO_MITSHM=1
+      - XAUTHORITY=/root/.Xauthority
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:rw
+      - ./src:/app/ros2_project/src
+    command: >
+      ros2 launch ur_robot_driver ur_control.launch.py
+      ur_type:=ur5
+      robot_ip:=ursim
+      headless_mode:=true
+      launch_rviz:=true
+      controller_spawner_timeout:=60
+  ursim:
+    image: universalrobots/ursim_e-series:latest
+    container_name: ursim
+    networks:
+      - ur_net
+    ports:
+      - "6080:6080"
+      - "5900:5900"
+    environment:
+      - ROBOT_MODEL=UR5
+
+networks:
+  ur_net:
+    driver: bridge
