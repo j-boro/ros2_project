@@ -3,7 +3,9 @@ services:
     build: .
     container_name: ros_robot
     networks:
-      - ur_net
+      ur_net:
+        ipv4_address: 172.25.0.10
+    restart: always
     devices:
       - /dev/dri:/dev/dri
       
@@ -20,22 +22,34 @@ services:
       - ./src:/app/ros2_project/src
     command: >
       ros2 launch ur_robot_driver ur_control.launch.py
-      ur_type:=ur5
-      robot_ip:=ursim
-      headless_mode:=true
+      ur_type:=ur5e
+      robot_ip:=172.25.0.20
+      reverse_ip:=172.25.0.10
+      headless_mode:=false
       launch_rviz:=true
+      use_fake_hardware:=false
+      initial_joint_controller:=scaled_joint_trajectory_controller
       controller_spawner_timeout:=60
   ursim:
     image: universalrobots/ursim_e-series:latest
     container_name: ursim
     networks:
-      - ur_net
+      ur_net:
+        ipv4_address: 172.25.0.20
     ports:
       - "6080:6080"
       - "5900:5900"
     environment:
-      - ROBOT_MODEL=UR5
+      - ROBOT_MODEL=UR5e
+    volumes:
+      - ./urcaps:/urcapsos
+      - ./ursim_data:/ursim/programs.UR5
+      - ./ursim_sys:/ursim/.urcaps
+      - ./ursim_cache:/ursim/GUI/felix-cache
 
 networks:
   ur_net:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
