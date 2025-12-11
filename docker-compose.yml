@@ -8,6 +8,7 @@ services:
     restart: always
     devices:
       - /dev/dri:/dev/dri
+      - /dev/video0:/dev/video0
       
     privileged: true
     environment:
